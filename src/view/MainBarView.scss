@@ -1,0 +1,12 @@
+.mainbar {
+	padding: 20px;
+	display: flex;
+	justify-content: center;
+	align-items: center;
+	flex-direction: column;
+	.mainbar-title {
+		margin: 20px 0;
+		font-size: 40px;
+		font-weight: 900;
+	}
+}
