@@ -5,7 +5,9 @@ import "./MainBarView.scss"
 import { nanoid } from "nanoid"
 import { useState } from "react"
 import axios from "axios"
-import { stringify } from "querystring"
+import { RootStateOrAny, useSelector } from "react-redux"
+import { useDispatch } from "react-redux"
+import { updateTasks } from "../features/tasks/taskSlice"
 
 interface ITascStatus {
 	[key: string]: boolean
@@ -23,6 +25,11 @@ interface ITascList {
 }
 
 const MainBarView = () => {
+	const taskListStore = useSelector((state: RootStateOrAny) => state.taskListState)
+	const dispatch = useDispatch()
+
+	console.log("taskListStore", taskListStore)
+
 	const [tascStatus, updateTascStatus] = useState<ITascStatus | null>(null)
 	const [taskListState, updateTaskListState] = useState<ITascList[]>([])
 	const [imageData, saveImageData] = useState("")
@@ -60,6 +67,8 @@ const MainBarView = () => {
 		})
 		//saving response from request to store
 		updateTaskListState([...taskList])
+		//redux
+		//dispatch(updateTasks([...taskList]))
 	}, [])
 
 	React.useEffect(() => {
@@ -86,6 +95,8 @@ const MainBarView = () => {
 		if (findElem) {
 			findElem.tasks = [...tasks]
 			updateTaskListState([...upList])
+			//redux
+			//dispatch(updateTasks([...upList]))
 			checkTaskStatus(title)
 		}
 	}
