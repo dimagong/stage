@@ -15,7 +15,7 @@ const taskSlice = createSlice({
 	initialState,
 	reducers: {
 		updateTasks(state, action) {
-			state.push(action.payload)
+			return [...action.payload] as ITascList[]
 		},
 	},
 })

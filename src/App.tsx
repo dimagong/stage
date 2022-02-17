@@ -5,6 +5,7 @@ import "./App.scss"
 import AppBarView from "./view/AppBarView"
 import FooterBarView from "./view/FooterBarView"
 import MainBarView from "./view/MainBarView"
+import WarningSnackbar from "./widget/WarningSnackbar"
 
 function App() {
 	return (
@@ -18,6 +19,7 @@ function App() {
 			<Box className='footer'>
 				<FooterBarView />
 			</Box>
+			<WarningSnackbar />
 		</div>
 	)
 }

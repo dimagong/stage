@@ -8,78 +8,49 @@ import axios from "axios"
 import { RootStateOrAny, useSelector } from "react-redux"
 import { useDispatch } from "react-redux"
 import { updateTasks } from "../features/tasks/taskSlice"
-
-interface ITascStatus {
-	[key: string]: boolean
-}
-interface IReasponse {
-	title: string
-	tasks: string[]
-}
-interface ITascList {
-	title: string
-	tasks: {
-		name: string
-		status: boolean
-	}[]
-}
+import fetchdata from "../api/fetchdata"
+import setStartStage from "../lib/setstartstage"
+import setStartTascks from "../lib/setstarttasks"
+import { ITascList, ITascStatus } from "../models/interfaces"
+import checkStatusStage from "../lib/checkstatusstage"
+import useless from "../api/useless"
+import findFalseStage from "../lib/findfalsestage"
+import AlertFact from "../widget/AlertFact"
 
 const MainBarView = () => {
-	const taskListStore = useSelector((state: RootStateOrAny) => state.taskListState)
+	const taskListStore: ITascList[] = useSelector((state: RootStateOrAny) => state.taskListState)
 	const dispatch = useDispatch()
 
-	console.log("taskListStore", taskListStore)
-
 	const [tascStatus, updateTascStatus] = useState<ITascStatus | null>(null)
-	const [taskListState, updateTaskListState] = useState<ITascList[]>([])
-	const [imageData, saveImageData] = useState("")
+
+	const [factState, onFactState] = useState("")
 
 	React.useEffect(() => {
 		console.log("React.useEffect")
-		//getting data from some rest api
-		const dataApi = [
-			{
-				title: "Foundation",
-				tasks: [
-					"Setup virtual office",
-					"Set mission and vision",
-					"Select business name",
-					"Buy domains",
-				],
-			},
-			{ title: "Discovery", tasks: ["Create roadmap", "Competitor analysis"] },
 
-			{ title: "Delivery Next", tasks: ["Release marketing website", "Release MVP"] },
-		]
-		//saving start data to store/ Foundation: false ...
-		const startState: ITascStatus = {}
-		dataApi.forEach((element) => {
-			startState[element.title] = false
-		})
-		updateTascStatus({ ...startState })
+		//getting data from some rest api
+		const dataApi = [...fetchdata]
+
+		//saving start data to state/ Foundation: false ...
+		const startFalseStage = setStartStage(dataApi)
+		updateTascStatus({ ...startFalseStage })
 
 		// updating type of tasks / ITascList
-		const taskList = dataApi.map((el) => {
-			let items = el.tasks.map((task) => {
-				return { name: task, status: false }
-			})
-			return { title: el.title, tasks: items }
-		})
-		//saving response from request to store
-		updateTaskListState([...taskList])
-		//redux
-		//dispatch(updateTasks([...taskList]))
+		const taskList = setStartTascks(dataApi)
+		console.log("taskList", taskList)
+
+		//push to store
+		dispatch(updateTasks([...taskList]))
 	}, [])
 
 	React.useEffect(() => {
-		completeExecution()
 		if (tascStatus) {
-			window.sessionStorage.setItem("tascStatus", JSON.stringify(tascStatus))
+			//checking tasks execution
+			completeExecution()
+			//saving progress to local storage
+			window.localStorage.setItem("tascStatus", JSON.stringify(tascStatus))
 		}
-		if (taskListState) {
-			window.sessionStorage.setItem("taskListState", JSON.stringify(taskListState))
-		}
-	})
+	}, [tascStatus])
 
 	//updating after click to input field
 	const updateTaskList = (
@@ -89,75 +60,67 @@ const MainBarView = () => {
 			status: boolean
 		}[]
 	) => {
-		const upList = [...taskListState]
-		const findElem: ITascList | undefined = upList.find((el) => el.title === title)
-
-		if (findElem) {
-			findElem.tasks = [...tasks]
-			updateTaskListState([...upList])
-			//redux
-			//dispatch(updateTasks([...upList]))
-			checkTaskStatus(title)
-		}
-	}
-
-	//change status of tasks group
-	const checkTaskStatus = (title: string): void => {
-		const batchTasks = taskListState.find((el) => el.title === title)
-		if (batchTasks) {
-			const unfulfilled = batchTasks.tasks.filter((task) => task.status === false)
-			const confirm = { [title]: false }
-			if (!unfulfilled.length) {
-				confirm[title] = true
+		const upTaskListStore = taskListStore.map((el) => {
+			if (el.title === title) {
+				return { ...el, tasks }
 			}
-			updateTascStatus({ ...tascStatus, ...confirm })
+			return el
+		})
+
+		//push to store
+		dispatch(updateTasks(upTaskListStore))
+
+		//checking status of stage
+		const checkStageStatus: ITascStatus | null = tascStatus
+			? checkStatusStage(title, upTaskListStore, tascStatus)
+			: null
+		if (checkStageStatus) updateTascStatus({ ...checkStageStatus })
+	}
+
+	//checking complete execution all tasks and running final request
+	const completeExecution = () => {
+		const isFalseStatus = findFalseStage(tascStatus)
+
+		if (!isFalseStatus) {
+			useless()
+				.then((resp) => {
+					console.log("resp", resp)
+					if (resp?.text) {
+						onFactState(resp.text)
+					} else {
+						onFactState("Oh, the facts are over")
+					}
+				})
+				.catch((error) => {
+					console.error("Error", error)
+					onFactState("Something went wrong")
+				})
 		}
 	}
 
-	//checking fulfilling previous task
-	const checkPreviousTask = (title: string): boolean => {
-		if (tascStatus) {
-			const convertToArray: [string, boolean][] = Object.entries(tascStatus)
-			const indexBatch: number = convertToArray.findIndex((el) => el[0] === title)
-			if (indexBatch > 0) {
-				return convertToArray[indexBatch - 1][1]
-			}
-			return true
-		}
-		return false
+	const onCloseAlert = () => {
+		onFactState("")
 	}
 
-	//checking complete execution all tasks and redirection to next page
-	const completeExecution = async () => {
-		if (tascStatus) {
-			const convertToArray: [string, boolean][] = Object.entries(tascStatus)
-			const findNoExtcution = convertToArray.find((el) => el[1] === false)
-			console.log("findNoExtcution", findNoExtcution)
-			if (!findNoExtcution) {
-				const resp = await axios.get("https://uselessfacts.jsph.pl/random.json")
-				saveImageData(resp.data.source_url)
-				if (resp.data.source_url) {
-					window.location.href = resp.data.source_url
-				}
-			}
-		}
-	}
-
+	console.log("taskListStore", taskListStore)
+	const listTasks = [...taskListStore]
 	return (
 		<div className='mainbar'>
 			<Typography className='mainbar-title'>My startup progress</Typography>
-			{taskListState.length
-				? taskListState.map((el) => {
+			{listTasks.length
+				? listTasks.map((el) => {
 						return (
 							<StageComponent
-								{...el}
+								title={el.title}
+								tasks={el.tasks}
 								updateTaskList={updateTaskList}
-								isCheckPreviousTask={checkPreviousTask(el.title)}
+								tascStatus={{ ...tascStatus }}
 								key={nanoid()}
 							/>
 						)
 				  })
 				: ""}
+			{factState ? <AlertFact fact={factState} onCloseAlert={onCloseAlert} /> : null}
 		</div>
 	)
 }
