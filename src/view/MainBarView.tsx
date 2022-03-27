@@ -4,7 +4,7 @@ import StageComponent from "../widget/StageComponent"
 import "./MainBarView.scss"
 import { nanoid } from "nanoid"
 import { useState } from "react"
-import axios from "axios"
+
 import { RootStateOrAny, useSelector } from "react-redux"
 import { useDispatch } from "react-redux"
 import { updateTasks } from "../features/tasks/taskSlice"
@@ -28,25 +28,29 @@ const MainBarView = () => {
 	React.useEffect(() => {
 		console.log("React.useEffect")
 
-		//getting data from some rest api
-		const dataApi = [...fetchdata]
+		const initialUpdate = () => {
+			//getting data from some rest api
+			const dataApi = [...fetchdata]
 
-		//saving start data to state/ Foundation: false ...
-		const startFalseStage = setStartStage(dataApi)
-		updateTascStatus({ ...startFalseStage })
+			//saving start data to state/ Foundation: false ...
+			const startFalseStage = setStartStage(dataApi)
+			updateTascStatus({ ...startFalseStage })
 
-		// updating type of tasks / ITascList
-		const taskList = setStartTascks(dataApi)
-		console.log("taskList", taskList)
+			// updating type of tasks / ITascList
+			const taskList = setStartTascks(dataApi)
+			console.log("taskList", taskList)
 
-		//push to store
-		dispatch(updateTasks([...taskList]))
-	}, [])
+			//push to store
+			dispatch(updateTasks([...taskList]))
+		}
+		initialUpdate()
+	}, [dispatch])
 
 	React.useEffect(() => {
+		console.log("React.useEffect tascStatus")
 		if (tascStatus) {
 			//checking tasks execution
-			completeExecution()
+			completeExecution(tascStatus)
 			//saving progress to local storage
 			window.localStorage.setItem("tascStatus", JSON.stringify(tascStatus))
 		}
@@ -78,7 +82,7 @@ const MainBarView = () => {
 	}
 
 	//checking complete execution all tasks and running final request
-	const completeExecution = () => {
+	const completeExecution = (tascStatus: ITascStatus) => {
 		const isFalseStatus = findFalseStage(tascStatus)
 
 		if (!isFalseStatus) {
