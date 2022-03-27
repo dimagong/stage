@@ -99,6 +99,9 @@ const MainBarView = () => {
 					console.error("Error", error)
 					onFactState("Something went wrong")
 				})
+				.finally(() => {
+					console.log("Request has been done")
+				})
 		}
 	}
 
