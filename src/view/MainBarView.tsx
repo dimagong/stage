@@ -7,7 +7,7 @@ import { useState } from "react"
 
 import { RootStateOrAny, useSelector } from "react-redux"
 import { useDispatch } from "react-redux"
-import { updateTasks } from "../features/tasks/taskSlice"
+import { updateTasks } from "../redux/slice/tasks/taskSlice"
 import fetchdata from "../api/fetchdata"
 import setStartStage from "../lib/setstartstage"
 import setStartTascks from "../lib/setstarttasks"
@@ -47,7 +47,6 @@ const MainBarView = () => {
 	}, [dispatch])
 
 	React.useEffect(() => {
-		console.log("React.useEffect tascStatus")
 		if (tascStatus) {
 			//checking tasks execution
 			completeExecution(tascStatus)

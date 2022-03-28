@@ -4,7 +4,7 @@ import Snackbar from "@mui/material/Snackbar"
 import IconButton from "@mui/material/IconButton"
 import CloseIcon from "@mui/icons-material/Close"
 import { RootStateOrAny, useDispatch, useSelector } from "react-redux"
-import { openSnack } from "../features/snack/snackSlice"
+import { openSnack } from "../redux/slice/snack/snackSlice"
 
 interface IOpenSnackBar {
 	open: boolean

@@ -6,7 +6,7 @@ import { ITascStatus } from "../models/interfaces"
 import confirmNextStage from "../lib/confirmnextstage"
 import CheckIcon from "@mui/icons-material/Check"
 import { useDispatch } from "react-redux"
-import { openSnack } from "../features/snack/snackSlice"
+import { openSnack } from "../redux/slice/snack/snackSlice"
 
 export interface IProps {
 	title: string
